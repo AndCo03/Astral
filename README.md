@@ -3,17 +3,7 @@ Tool per l'audit e la produzione di un file per il risk assessment di una macchi
 Requirements:
 - Paramiko
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+<br>
+<br>
+<br>
 Deadline del 16 ott 2026.
