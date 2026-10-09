@@ -21,15 +21,13 @@ A lightweight, automated toolkit designed to perform remote security audits and 
 
 * SSH access with `sudo` privileges on the target server.
 * Local machine with SSH client installed.
+* Paramiko, for ssh connection.
 
 ## Usage
 
 ```bash
 # Esempio di comando per avviare lo scan
-./audit.sh --target user@192.168.1.50
-
-Requirements:
-- Paramiko, for ssh connection
+```
 
 <br>
 <br>
