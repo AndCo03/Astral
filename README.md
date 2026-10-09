@@ -26,7 +26,7 @@ A lightweight, automated toolkit designed to perform remote security audits and 
 ## Usage
 
 ```bash
-# Esempio di comando per avviare lo scan
+python3 main.py --host <IP> --user <utente> --key ~/.ssh/id_rsa
 ```
 
 <br>
