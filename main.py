@@ -12,6 +12,7 @@ from utils.packages import PackageManager
 from utils.report import Report
 
 from modules import system_info
+from modules import ports
 from modules import lynis
 
 
@@ -19,6 +20,7 @@ from modules import lynis
 # Each entry: (module, display name)
 MODULES = [
     (system_info, system_info.NAME),
+    (ports, ports.NAME),
     (lynis, lynis.NAME),
 ]
 
