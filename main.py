@@ -11,12 +11,14 @@ from utils.ssh import SSHSession
 from utils.packages import PackageManager
 from utils.report import Report
 
+from modules import system_info
 from modules import lynis
 
 
 # Registry of modules in execution order.
 # Each entry: (module, display name)
 MODULES = [
+    (system_info, system_info.NAME),
     (lynis, lynis.NAME),
 ]
 
