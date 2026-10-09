@@ -13,17 +13,18 @@ from utils.report import Report
 
 from modules import system_info
 from modules import ports
-from modules import nmap
 from modules import lynis
-
+from modules import nmap
+from modules import rootkit
 
 # Registry of modules in execution order.
 # Each entry: (module, display name)
 MODULES = [
     (system_info, system_info.NAME),
     (ports, ports.NAME),
-    (nmap, nmap.NAME),
     (lynis, lynis.NAME),
+    (nmap, nmap.NAME),
+    (rootkit, rootkit.NAME)
 ]
 
 
