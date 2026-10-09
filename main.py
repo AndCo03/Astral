@@ -13,6 +13,7 @@ from utils.report import Report
 
 from modules import system_info
 from modules import ports
+from modules import nmap
 from modules import lynis
 
 
@@ -21,6 +22,7 @@ from modules import lynis
 MODULES = [
     (system_info, system_info.NAME),
     (ports, ports.NAME),
+    (nmap, nmap.NAME),
     (lynis, lynis.NAME),
 ]
 
