@@ -3,34 +3,19 @@ Lynis module for the Linux audit tool.
 Runs lynis audit system and returns its output.
 """
 
-from utils.packages import PackageManager
-
 
 NAME = "Lynis System Audit"
 PACKAGE = "lynis"
 
 
-def run(ssh, report):
+def run(ssh, report, pkg_mgr):
     """
     Run the Lynis system audit on the remote host.
 
     :param ssh: SSHSession instance.
     :param report: Report instance.
+    :param pkg_mgr: Shared PackageManager instance.
     """
-    pkg_mgr = PackageManager(ssh)
-
-    try:
-        pkg_mgr.detect_os()
-    except Exception as e:
-        report.add_module(
-            name=NAME,
-            commands=[],
-            output="",
-            severity="Info",
-            notes=f"OS detection failed: {e}"
-        )
-        return
-
     installed = pkg_mgr.install(PACKAGE)
     if PACKAGE not in installed and not pkg_mgr.is_installed(PACKAGE):
         report.add_module(
