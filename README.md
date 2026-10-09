@@ -1,7 +1,32 @@
-Tool per l'audit e la produzione di un file per il risk assessment di una macchina Linux-server.
+# Linux Server Remote Risk Assessment Toolkit
 
-Requirements:
-- Paramiko, for ssh connection
+A lightweight, automated toolkit designed to perform remote security audits and risk assessments on Linux servers over SSH with zero permanent footprint.
+
+## Key Features
+
+* **Remote Audit via SSH:** Connects securely to the target machine without requiring an agent installed beforehand.
+* **Smart Dependency Management:** Checks for existing tools on the target system and installs *only* the missing utilities required for the audit.
+* **Centralized Reporting:** Generates and aggregates all assessment reports directly on the scanning host.
+* **Automatic Cleanup:** Uninstalls all packages downloaded by the toolkit during execution, leaving the target server as clean as it was before the scan.
+
+## Workflow
+
+1. **Connect:** Establishes an SSH connection to the target server.
+2. **Inspect:** Identifies missing diagnostic packages.
+3. **Provision:** Temporarily installs only the missing dependencies.
+4. **Execute & Report:** Runs the audit tools and saves reports on the local scanning machine.
+5. **Clean Up:** Purges all installed packages and temporary files from the target machine.
+
+## Prerequisites
+
+* SSH access with `sudo` privileges on the target server.
+* Local machine with SSH client installed.
+* Paramiko, for ssh connection.
+
+## Usage
+
+```bash
+# Esempio di comando per avviare lo scan
 
 <br>
 <br>
