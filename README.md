@@ -31,5 +31,4 @@ A lightweight, automated toolkit designed to perform remote security audits and 
 
 <br>
 <br>
-<br>
 Deadline del 16 ott 2026.
