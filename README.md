@@ -32,4 +32,4 @@ python3 main.py --host <IP> --user <utente> --key ~/.ssh/<public key>
 <br>
 Up to Date: 09/10/2026
 <br>
-Version: 1.4.1
+Version: 1.4.2
