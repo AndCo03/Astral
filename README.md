@@ -29,6 +29,6 @@ python3 main.py --host <IP> --user <utente> --key ~/.ssh/<host public key>
 ```
 
 <br>
-Up to Date: 09/10/2026
+Up to Date: 12/10/2026
 <br>
 Version: 1.4.2
