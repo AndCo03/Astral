@@ -24,9 +24,8 @@ A lightweight, automated toolkit designed to perform remote security audits and 
 * Paramiko, for ssh connection.
 
 ## Usage
-**From root:**
 ```bash
-python3 main.py --host <IP> --user <utente> --key ~/.ssh/<public key>
+python3 main.py --host <IP> --user <utente> --key ~/.ssh/<host public key>
 ```
 
 <br>
