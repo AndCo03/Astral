@@ -21,7 +21,7 @@ A lightweight, automated toolkit designed to perform remote security audits and 
 
 * SSH access with `sudo` privileges on the target server.
 * Local machine with SSH client installed.
-* Paramiko, for ssh connection.
+* Paramiko installed, for ssh connection.
 
 ## Usage
 ```bash
@@ -29,6 +29,6 @@ python3 main.py --host <IP> --user <utente> --key ~/.ssh/<host public key>
 ```
 
 <br>
-Up to Date: 12/10/2026
+Up to Date: 13/10/2026
 <br>
 Version: 1.4.2
