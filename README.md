@@ -25,7 +25,8 @@ A lightweight, automated toolkit designed to perform remote security audits and 
 
 ## Usage
 ```bash
-python3 main.py --host <IP> --user <utente> --key ~/.ssh/<host public key>
+ssh-copy-id -i ~/.ssh/<host_public_key> <USER>@<IP>
+python main.py --host <IP> --user <utente> --key ~/.ssh/<host_public_key>
 ```
 
 <br>
