@@ -1,4 +1,5 @@
-# ASTRAL - Automated Server Toolkit for Remote Assessment on Linux
+# Astral
+## Automated Server Toolkit for Remote Assessment on Linux
 
 A lightweight, automated toolkit designed to perform remote security audits and risk assessments on Linux servers over SSH with zero permanent footprint.
 
