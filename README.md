@@ -15,7 +15,7 @@ A lightweight, automated toolkit designed to perform remote security audits and 
 2. **Inspect:** Identifies missing diagnostic packages.
 3. **Provision:** Temporarily installs only the missing dependencies.
 4. **Execute & Report:** Runs the audit tools and saves reports on the local scanning machine.
-5. **Clean Up:** Purges all installed packages and temporary files from the target machine.
+5. **Clean Up:** Purges all installed packages and temporary files and orphaned dependencies (best effort, depending on the package manager)from the target machine.
 
 ## Prerequisites
 
