@@ -13,7 +13,7 @@ def _determine_severity(output):
         return "Critical", "Possibile infezione rootkit rilevata (INFECTED)."
     if "warning" in lowered:
         return "High", "Warning rilevati durante il controllo rootkit."
-    return "Info", "Nessun rootkit o warning rilevante."
+    return "N/D", "Nessun rootkit o warning rilevante."
 
 def run(ssh, report, pkg_mgr):
     installed = pkg_mgr.install(PACKAGES)
@@ -24,7 +24,7 @@ def run(ssh, report, pkg_mgr):
             name=NAME,
             commands=[f"install {' '.join(PACKAGES)}"],
             output="",
-            severity="Info",
+            severity="N/D",
             notes="Neither chkrootkit nor rkhunter could be installed."
         )
         return

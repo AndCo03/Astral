@@ -40,7 +40,7 @@ def run(ssh, report, pkg_mgr):
             name=NAME,
             commands=[f"install {PACKAGE}"],
             output="",
-            severity="Info",
+            severity="N/D",
             notes=f"Package {PACKAGE} could not be installed."
         )
         return

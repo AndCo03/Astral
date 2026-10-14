@@ -29,7 +29,7 @@ def _determine_severity(warnings, suggestions):
     elif suggestions > 0:
         return "Low", f"{suggestions} suggerimenti di hardening."
     else:
-        return "Info", "Nessun warning o suggerimento critico."
+        return "OK", "Nessun warning o suggerimento critico."
 
 def run(ssh, report, pkg_mgr):
     installed = pkg_mgr.install(PACKAGE)
@@ -38,7 +38,7 @@ def run(ssh, report, pkg_mgr):
             name=NAME,
             commands=[f"install {PACKAGE}"],
             output="",
-            severity="Info",
+            severity="N/D",
             notes=f"Package {PACKAGE} could not be installed."
         )
         return
