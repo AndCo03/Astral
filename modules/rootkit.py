@@ -3,19 +3,19 @@ Rootkit detection module for the Linux audit tool.
 Runs chkrootkit and rkhunter.
 """
 
-
 NAME = "Rootkit Check"
 PACKAGES = ["chkrootkit", "rkhunter"]
 
+def _determine_severity(output):
+    """Analizza l'output combinato per decidere la severity."""
+    lowered = output.lower()
+    if "infected" in lowered:
+        return "Critical", "Possibile infezione rootkit rilevata (INFECTED)."
+    if "warning" in lowered:
+        return "High", "Warning rilevati durante il controllo rootkit."
+    return "Info", "Nessun rootkit o warning rilevante."
 
 def run(ssh, report, pkg_mgr):
-    """
-    Run chkrootkit and rkhunter on the remote host.
-
-    :param ssh: SSHSession instance.
-    :param report: Report instance.
-    :param pkg_mgr: Shared PackageManager instance.
-    """
     installed = pkg_mgr.install(PACKAGES)
     missing = [p for p in PACKAGES
                if p not in installed and not pkg_mgr.is_installed(p)]
@@ -61,10 +61,16 @@ def run(ssh, report, pkg_mgr):
         if code != 0:
             outputs.append(f"[exit code: {code}]")
 
+    full_output = "\n\n".join(outputs)
+    severity, notes = _determine_severity(full_output)
+
+    if missing:
+        notes = (notes + " " if notes else "") + f"Missing packages: {', '.join(missing)}"
+
     report.add_module(
         name=NAME,
         commands=commands,
-        output="\n\n".join(outputs),
-        severity="Info",
-        notes=f"Missing packages: {', '.join(missing)}" if missing else None
+        output=full_output,
+        severity=severity,
+        notes=notes
     )
