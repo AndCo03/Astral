@@ -30,6 +30,6 @@ python main.py --host <IP> --user <utente> --key ~/.ssh/<host_public_key>
 ```
 
 <br>
-Up to Date: 13/10/2026
+Up to Date: 14/10/2026
 <br>
-Version: 1.4.2
+Version: 1.5.0
