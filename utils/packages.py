@@ -3,6 +3,12 @@ Package management utilities for the Linux audit tool.
 Detects the distribution and package manager, installs and removes packages.
 """
 
+def _major_version(version_str):
+    """Estrae la versione major come intero. Restituisce 0 se non parsabile."""
+    try:
+        return int(str(version_str).split('.')[0])
+    except (ValueError, AttributeError):
+        return 0
 
 class PackageManager:
     """
@@ -18,10 +24,6 @@ class PackageManager:
         self.installed_by_tool = set()
 
     def detect_os(self):
-        """
-        Detect the remote OS distribution and version.
-        Sets self.distro_id, self.distro_version, self.pkg_manager.
-        """
         stdout, stderr, code = self.ssh.execute("cat /etc/os-release")
         if code != 0:
             raise Exception("Failed to read /etc/os-release")
@@ -38,7 +40,11 @@ class PackageManager:
         if self.distro_id in ('debian', 'ubuntu', 'linuxmint', 'pop'):
             self.pkg_manager = 'apt'
         elif self.distro_id in ('fedora', 'rhel', 'centos', 'rocky', 'almalinux'):
-            self.pkg_manager = 'dnf' if self.distro_id != 'centos' or self.distro_version >= '8' else 'yum'
+            if self.distro_id == 'centos':
+                major = _major_version(self.distro_version)
+                self.pkg_manager = 'dnf' if major >= 8 else 'yum'
+            else:
+                self.pkg_manager = 'dnf'
         elif self.distro_id.startswith('opensuse'):
             self.pkg_manager = 'zypper'
         elif self.distro_id == 'arch':
