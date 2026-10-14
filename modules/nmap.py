@@ -25,13 +25,13 @@ def _parse_nmap_ports(output):
 
 def _determine_severity(ports):
     if not ports:
-        return "Info", "Nessuna porta aperta rilevata da nmap."
+        return "N/D", "Nessuna porta aperta rilevata da nmap."
     dangerous_found = ports & DANGEROUS_PORTS
     if dangerous_found:
         return "High", f"Porte pericolose aperte: {', '.join(map(str, sorted(dangerous_found)))}"
     if len(ports) > 10:
         return "Low", f"Numero elevato di porte aperte ({len(ports)})."
-    return "Info", f"{len(ports)} porte aperte, nessuna critica."
+    return "OK", f"{len(ports)} porte aperte, nessuna critica."
 
 def run(ssh, report, pkg_mgr):
     installed = pkg_mgr.install(PACKAGE)

@@ -26,7 +26,7 @@ def _parse_ports(output):
 def _determine_severity(ports):
     """Restituisce (severity, note) in base alle porte trovate."""
     if not ports:
-        return "Info", "Nessuna porta in ascolto rilevata."
+        return "N/D", "Nessuna porta in ascolto rilevata."
     
     dangerous_found = ports & DANGEROUS_PORTS
     if dangerous_found:
@@ -35,7 +35,7 @@ def _determine_severity(ports):
     if len(ports) > 10:
         return "Low", f"Numero elevato di porte in ascolto ({len(ports)})."
     
-    return "Info", f"{len(ports)} porte in ascolto, nessuna critica."
+    return "OK", f"{len(ports)} porte in ascolto, nessuna critica."
 
 def run(ssh, report, pkg_mgr):
     command = "ss -tulpn"
