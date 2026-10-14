@@ -1,4 +1,4 @@
-# Linux Server Remote Risk Assessment Toolkit
+# ASTRAL - Automated Server Toolkit for Remote Assessment on Linux
 
 A lightweight, automated toolkit designed to perform remote security audits and risk assessments on Linux servers over SSH with zero permanent footprint.
 
@@ -21,7 +21,7 @@ A lightweight, automated toolkit designed to perform remote security audits and 
 
 * SSH access with `sudo` privileges on the target server.
 * Local machine with SSH client installed.
-* Paramiko installed, for ssh connection.
+* Paramiko (Dipendence) installed, for ssh connection.
 
 ## Usage
 ```bash
