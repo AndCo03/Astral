@@ -7,7 +7,7 @@ A lightweight, automated toolkit designed to perform remote security audits and 
 * **Remote Audit via SSH:** Connects securely to the target machine without requiring an agent installed beforehand.
 * **Smart Dependency Management:** Checks for existing tools on the target system and installs *only* the missing utilities required for the audit.
 * **Centralized Reporting:** Generates and aggregates all assessment reports directly on the scanning host.
-* **Automatic Cleanup:** Uninstalls all packages downloaded by the toolkit during execution, leaving the target server as clean as it was before the scan.
+* **Automatic Cleanup:** Uninstalls all packages downloaded by the toolkit during execution, removes configuration files and automatically installed dependencies, leaving the target server as clean as it was before the scan.
 
 ## Workflow
 
@@ -32,4 +32,4 @@ python main.py --host <IP> --user <utente> --key ~/.ssh/<host_public_key>
 <br>
 Up to Date: 14/10/2026
 <br>
-Version: 1.8.2
+Version: 1.8.3

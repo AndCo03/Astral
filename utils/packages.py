@@ -110,22 +110,31 @@ class PackageManager:
         return installed
 
     def cleanup(self):
-        """Remove all packages installed by this tool."""
+        """Remove all packages installed by this tool, including config files and orphaned dependencies."""
         if not self.installed_by_tool:
             return
 
         pkgs = list(self.installed_by_tool)
         for pkg in pkgs:
             if self.pkg_manager == 'apt':
-                cmd = f"apt remove -y {pkg}"
+                cmd = f"apt purge -y {pkg}"
             elif self.pkg_manager in ('dnf', 'yum'):
                 cmd = f"{self.pkg_manager} remove -y {pkg}"
             elif self.pkg_manager == 'zypper':
-                cmd = f"zypper remove -y {pkg}"
+                cmd = f"zypper remove -y --clean-deps {pkg}"
             elif self.pkg_manager == 'pacman':
-                cmd = f"pacman -R --noconfirm {pkg}"
+                cmd = f"pacman -Rns --noconfirm {pkg}"
             else:
                 continue
 
             self.ssh.execute(cmd, sudo=True)
             self.installed_by_tool.discard(pkg)
+
+        if self.pkg_manager == 'apt':
+            self.ssh.execute("apt autoremove -y", sudo=True)
+        elif self.pkg_manager in ('dnf', 'yum'):
+            self.ssh.execute(f"{self.pkg_manager} autoremove -y", sudo=True)
+        elif self.pkg_manager == 'zypper':
+            self.ssh.execute("zypper purge-kernels", sudo=True)
+        elif self.pkg_manager == 'pacman':
+            pass
