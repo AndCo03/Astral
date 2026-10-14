@@ -3,9 +3,14 @@ SSH module for the Linux audit tool.
 Handles connection, command execution, and sudo support.
 """
 
+import os
 import socket
 import paramiko
 
+
+class SudoError(Exception):
+    """Raised when a sudo command fails due to authentication or permission issues."""
+    pass
 
 class SSHSession:
     """
@@ -77,6 +82,8 @@ class SSHSession:
         :param sudo: If True, run the command with sudo.
         :param timeout: Optional timeout override.
         :return: Tuple (stdout, stderr, exit_code).
+        :raises SudoError: If sudo authentication fails.
+        :raises Exception: For timeouts or other errors.
         """
         if not self.client:
             raise Exception("SSH session not connected")
@@ -85,20 +92,20 @@ class SSHSession:
             timeout = self.timeout
 
         if sudo:
-            # -S reads password from stdin, -p '' suppresses prompt on stderr
             command = f"sudo -S -p '' {command}"
 
-        # Use a pseudo-terminal for sudo to handle requiretty and password prompts
-        stdin, stdout, stderr = self.client.exec_command(
-            command, timeout=timeout, get_pty=sudo
-        )
+        try:
+            stdin, stdout, stderr = self.client.exec_command(
+                command, timeout=timeout, get_pty=sudo
+            )
+        except Exception as e:
+            raise Exception(f"Failed to execute command: {e}")
 
         if sudo and self.sudo_password:
             try:
                 stdin.write(self.sudo_password + '\n')
                 stdin.flush()
             except Exception:
-                # Password might not be required (passwordless sudo)
                 pass
 
         try:
@@ -106,6 +113,27 @@ class SSHSession:
             stderr_str = stderr.read().decode('utf-8', errors='replace')
             exit_code = stdout.channel.recv_exit_status()
         except socket.timeout:
-            raise Exception(f"Command timed out: {command}")
+            try:
+                stdout.channel.close()
+            except Exception:
+                pass
+            raise Exception(f"Command timed out after {timeout}s: {command}")
+
+        # Rileva errori di sudo
+        if sudo and exit_code != 0:
+            sudo_error_patterns = [
+                "sorry, try again",
+                "incorrect password",
+                "sudo:",
+                "a password is required",
+                "no askpass program specified",
+                "authentication failure",
+            ]
+            stderr_lower = stderr_str.lower()
+            if any(pat in stderr_lower for pat in sudo_error_patterns):
+                raise SudoError(
+                    f"Sudo authentication failed for command: {command}\n"
+                    f"stderr: {stderr_str.strip()}"
+                )
 
         return stdout_str, stderr_str, exit_code

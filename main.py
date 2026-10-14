@@ -7,7 +7,7 @@ import argparse
 import getpass
 import sys
 
-from utils.ssh import SSHSession
+from utils.ssh import SSHSession, SudoError
 from utils.packages import PackageManager
 from utils.report import Report
 
@@ -98,6 +98,15 @@ def main():
         print(f"[*] Running module: {display_name}")
         try:
             module.run(ssh, report, pkg_mgr)
+        except SudoError as e:
+            report.add_module(
+                name=display_name,
+                commands=[],
+                output="",
+                severity="High",
+                notes=f"Sudo authentication failed: {e}"
+            )
+            print(f"[!] Sudo error in module {display_name}: {e}")
         except Exception as e:
             report.add_module(
                 name=display_name,
