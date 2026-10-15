@@ -74,6 +74,20 @@ class SSHSession:
         """Store the sudo password in memory."""
         self.sudo_password = password
 
+    def check_sudo(self):
+        """
+        Verify that sudo credentials work by running a harmless command.
+
+        :return: True if sudo works, False otherwise.
+        """
+        try:
+            _, _, code = self.execute("true", sudo=True, timeout=15)
+            return code == 0
+        except SudoError:
+            return False
+        except Exception:
+            return False
+
     def execute(self, command, sudo=False, timeout=None):
         """
         Execute a command on the remote host.
