@@ -112,7 +112,7 @@ def main():
                 name=display_name,
                 commands=[],
                 output="",
-                severity="Info",
+                severity="ERROR",
                 notes=f"Module crashed: {e}"
             )
             print(f"[!] Module {display_name} failed: {e}")
