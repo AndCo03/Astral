@@ -95,7 +95,7 @@ def main():
 
     # Run modules in order, each independently
     for module, display_name in MODULES:
-        print(f"[*] Running module: {display_name}")
+        print(f"[***] Running module: {display_name}")
         try:
             module.run(ssh, report, pkg_mgr)
         except SudoError as e:
