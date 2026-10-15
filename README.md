@@ -32,9 +32,9 @@ A lightweight, automated toolkit designed to perform remote security audits and 
 Fill in the placeholders between the `<>` brackets with your target and SSH credentials:
 ```bash
 # 1. Copy your public SSH key to the target server
-ssh-copy-id -i ~/.ssh/<host_public_key> <target_user>@<target_ip>
+ssh-copy-id -i ~/.ssh/<host_ssh_key> <target_user>@<target_ip>
 # 2. Run the ASTRAL assessment toolkit
-python main.py --host <target_ip> --user <target_user> --key ~/.ssh/<host_public_key>
+python main.py
 ```
 
 <br>
