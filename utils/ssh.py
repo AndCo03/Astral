@@ -3,15 +3,14 @@ SSH module for the Linux audit tool.
 Handles connection, command execution, and sudo support.
 """
 
-import os
 import socket
-from sys import stderr, stdout
 import paramiko
 
 
 class SudoError(Exception):
     """Raised when a sudo command fails due to authentication or permission issues."""
     pass
+
 
 class SSHSession:
     """
@@ -96,19 +95,20 @@ class SSHSession:
             command = f"sudo -S -p '' {command}"
 
         try:
+            # get_pty=False: senza PTY, sudo -S legge la password dalla pipe
+            # in modo affidabile. Su Ubuntu/Debian requiretty non è attivo,
+            # quindi il PTY non è necessario.
             stdin, stdout, stderr = self.client.exec_command(
-                command, timeout=timeout, get_pty=sudo
+                command, timeout=timeout, get_pty=False
             )
         except Exception as e:
             raise Exception(f"Failed to execute command: {e}")
 
-        if sudo and self.sudo_password:
+        if sudo:
             try:
-                stdin.write("stty -echo\n")
-                stdin.flush()
-                stdin.write(self.sudo_password + '\n')
-                stdin.flush()
-                stdin.write("stty echo\n")
+                # Scrivi sempre una riga, anche se la password è vuota:
+                # sudo -S attende comunque il newline su stdin.
+                stdin.write((self.sudo_password or "") + "\n")
                 stdin.flush()
             except Exception:
                 pass
@@ -118,7 +118,7 @@ class SSHSession:
             stderr_str = stderr.read().decode('utf-8', errors='replace')
             exit_code = stdout.channel.recv_exit_status()
         except socket.timeout:
-            raise Exception(f"Command timed out: {command}")
+            raise Exception(f"Command timed out after {timeout}s: {command}")
 
         # Sicurezza: rimuovi la password sudo dall'output catturato,
         # per evitare che finisca nel report.
@@ -131,10 +131,11 @@ class SSHSession:
             sudo_error_patterns = [
                 "sorry, try again",
                 "incorrect password",
-                "sudo:",
                 "a password is required",
                 "no askpass program specified",
                 "authentication failure",
+                "sudo: a terminal is required",
+                "sudo: no tty present",
             ]
             stderr_lower = stderr_str.lower()
             if any(pat in stderr_lower for pat in sudo_error_patterns):
