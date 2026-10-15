@@ -19,6 +19,7 @@ from modules import rootkit
 from modules import debsecan
 from modules import les
 from modules import trivy
+from modules import ssh_audit
 
 # Registry of modules in execution order.
 # Each entry: (module, display name)
@@ -28,6 +29,7 @@ MODULES = [
     (lynis, lynis.NAME),
     (les, les.NAME),
     (trivy, trivy.NAME),
+    (ssh_audit, ssh_audit.NAME),
     (debsecan, debsecan.NAME),
     (nmap, nmap.NAME),
     (rootkit, rootkit.NAME)
