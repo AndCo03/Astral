@@ -56,13 +56,13 @@ def main():
         timeout=args.timeout,
     )
 
-    print(f"[*] Connecting to {args.host}:{args.port} as {args.user}...")
+    print(f"[***] Connecting to {args.host}:{args.port} as {args.user}...")
     try:
         ssh.connect()
     except Exception as e:
         print(f"[!] Connection failed: {e}")
         sys.exit(1)
-    print("[+] Connected.")
+    print("[o] Connected.")
 
     # Sudo password: use CLI flag if provided, otherwise prompt once.
     sudo_pass = args.sudo_pass
@@ -77,7 +77,7 @@ def main():
     pkg_mgr = PackageManager(ssh)
     try:
         distro_id, distro_version, pkg_manager = pkg_mgr.detect_os()
-        print(f"[+] Detected OS: {distro_id} {distro_version} (pkg manager: {pkg_manager})")
+        print(f"[o] Detected OS: {distro_id} {distro_version} (pkg manager: {pkg_manager})")
     except Exception as e:
         print(f"[!] OS detection failed: {e}")
         ssh.close()
@@ -87,7 +87,7 @@ def main():
     report = Report(host=args.host, distro_id=distro_id, distro_version=distro_version)
 
     # Update package cache once before installing anything
-    print("[*] Updating package cache...")
+    print("[***] Updating package cache...")
     try:
         pkg_mgr.update_cache()
     except Exception as e:
@@ -117,10 +117,10 @@ def main():
             )
             print(f"[!] Module {display_name} failed: {e}")
         else:
-            print(f"[+] Module {display_name} completed.")
+            print(f"[o] Module {display_name} completed.")
 
     # Cleanup: remove only packages installed by this tool
-    print("[*] Cleaning up installed packages...")
+    print("[***] Cleaning up installed packages...")
     try:
         pkg_mgr.cleanup()
     except Exception as e:
@@ -136,7 +136,7 @@ def main():
         sys.exit(1)
 
     ssh.close()
-    print("[+] Done.")
+    print("[o] Done.")
 
 
 if __name__ == "__main__":
