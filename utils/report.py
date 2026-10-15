@@ -90,12 +90,12 @@ class Report:
         return counts
 
     def _risk_for(self, mod):
-        """Restituisce (probability, impact) con fallback sulla severity."""
+        """Returns (probability, impact) with fallback on severity."""
         prob = mod["probability"]
         imp = mod["impact"]
         if not prob or not imp:
             default_prob, default_imp = SEVERITY_TO_RISK.get(
-                mod["severity"], ("Bassa", "Basso")
+                mod["severity"], ("Low", "Low")
             )
             prob = prob or default_prob
             imp = imp or default_imp
