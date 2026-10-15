@@ -143,7 +143,7 @@ class Report:
         lines = []
         lines.append("# Technical Report")
         lines.append("")
-        lines.append(f"- **Host:** {self.host}")
+        lines.append(f"- **IP:** {self.host}")
         lines.append(f"- **Date:** {self.start_time.strftime('%Y-%m-%d %H:%M:%S')}")
         if self.distro_id:
             distro_str = self.distro_id
@@ -190,7 +190,7 @@ class Report:
         lines = []
         lines.append("# Risk Assessment Report")
         lines.append("")
-        lines.append(f"- **Host:** {self.host}")
+        lines.append(f"- **IP:** {self.host}")
         lines.append(f"- **Date:** {self.start_time.strftime('%Y-%m-%d %H:%M:%S')}")
         if self.distro_id:
             distro_str = self.distro_id

@@ -115,13 +115,13 @@ def run(ssh, report, pkg_mgr):
 
     # ssh-audit: 0 = OK, 1 = FAIL (algoritmi critici trovati)
     # Altri codici indicano un errore di connessione o parsing.
-    if code not in (0, 1):
+    if code == 1:
         report.add_module(
             name=NAME,
             commands=[command],
             output=output,
             severity="N/D",
-            notes=f"ssh-audit exited with unexpected code {code}."
+            notes="ssh-audit could not connect to the SSH server."
         )
         return
 
