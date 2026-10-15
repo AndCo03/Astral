@@ -17,6 +17,7 @@ from modules import lynis
 from modules import nmap
 from modules import rootkit
 from modules import debsecan
+from modules import les
 
 # Registry of modules in execution order.
 # Each entry: (module, display name)
@@ -24,6 +25,7 @@ MODULES = [
     (system_info, system_info.NAME),
     (ports, ports.NAME),
     (lynis, lynis.NAME),
+    (les, les.NAME),
     (debsecan, debsecan.NAME),
     (nmap, nmap.NAME),
     (rootkit, rootkit.NAME)
