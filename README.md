@@ -19,9 +19,14 @@ A lightweight, automated toolkit designed to perform remote security audits and 
 
 ## Prerequisites
 
-* SSH access with `sudo` privileges on the target server.
-* Local machine with SSH client installed.
-* Paramiko (Dipendence) installed, for ssh connection.
+### Target Server
+* SSH access enabled.
+* User account with `sudo` privileges.
+
+### Local Machine (Scanning Host)
+* Python installed.
+* SSH client installed.
+* **Paramiko** library installed for SSH management (`pip install paramiko`).
 
 ## Usage
 Fill in the placeholders between the `<>` brackets with your target and SSH credentials:
@@ -35,4 +40,4 @@ python main.py --host <target_ip> --user <target_user> --key ~/.ssh/<host_public
 <br>
 Up to Date: 15/10/2026
 <br>
-Version: 1.8.5
+Version: v1.8.5
