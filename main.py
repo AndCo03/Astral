@@ -35,6 +35,21 @@ MODULES = [
     (rootkit, rootkit.NAME),
 ]
 
+STARTUP_ART = r"""         .                      .
+         .                      ;
+         :                  - --+- -
+         !           .          !
+         |        .             .
+         |_         +
+      ,  | `.
+--- --+-<#>-+- ---  --  -
+      `._|_,'
+         T
+         |
+         !
+         :         . :
+         .       *"""
+
 
 def parse_args():
     """Parse command-line arguments."""
@@ -108,6 +123,7 @@ def _resolve_sudo(args, ssh):
 
 
 def main():
+    print(STARTUP_ART)
     args = parse_args()
 
     ssh = SSHSession(
