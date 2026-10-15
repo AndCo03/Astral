@@ -24,7 +24,7 @@ A lightweight, automated toolkit designed to perform remote security audits and 
 * Paramiko (Dipendence) installed, for ssh connection.
 
 ## Usage
-Insert between the <> symbles what required:
+Insert between the "<>" symbles what required:
 ```bash
 ssh-copy-id -i ~/.ssh/<host_public_key> <target_user>@<target_ip>
 python main.py --host <target_ip> --user <target_user> --key ~/.ssh/<host_public_key>
