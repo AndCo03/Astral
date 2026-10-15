@@ -55,6 +55,7 @@ STARTUP_ART = r"""         .                      .
   / _ \ / __|| __| '__/ _` | |
  / ___ \\__ \| |_| | | (_| | |
 /_/   \_\___/ \__|_|  \__,_|_|
+Automated Server Toolkit for Remote Assessment on Linux
          """
 
 # --- Config persistence (profiles) ---
@@ -219,7 +220,7 @@ def _resolve_connection(args):
         print("\n[i] Interactive setup (Ctrl+C to abort)")
 
     if not args.host:
-        target = _prompt("Target (user@host)")
+        target = _prompt("Target (user@ip)")
         u, h = _parse_target(target)
         args.host = h
         if u and not args.user:
