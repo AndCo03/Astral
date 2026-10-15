@@ -82,7 +82,7 @@ class Report:
         return max(0, score)
 
     def _severity_counts(self):
-        counts = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0, "Info": 0}
+        counts = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0, "OK": 0, "Info": 0}
         for mod in self.modules:
             sev = mod["severity"]
             if sev in counts:

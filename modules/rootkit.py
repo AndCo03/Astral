@@ -3,19 +3,44 @@ Rootkit detection module for the Linux audit tool.
 Runs chkrootkit and rkhunter.
 """
 
+import re
+
 NAME = "Rootkit Check"
 PACKAGES = ["chkrootkit", "rkhunter"]
 
+
 def _determine_severity(output):
-    """Analyze the combined output to decide the severity."""
-    lowered = output.lower()
-    if "infected" in lowered:
-        return "Critical", "Possible infection (INFECTED)."
-    if "warning" in lowered:
-        return "High", "Warnings detected during rootkit check."
-    if "ok" in lowered:
-        return "OK", "System appears to be in good condition."
-    return "N/D", "No rootkit or relevant warning found."
+    """
+    Analyze the combined output of chkrootkit and rkhunter to decide severity.
+
+    Notes:
+    - chkrootkit prints "not infected" for clean checks and "INFECTED"
+      (uppercase) only when something suspicious is found. A naive
+      substring match on "infected" would flag every clean system.
+    - rkhunter reports the number of suspected rootkits in the line
+      "Possible rootkits: N" as part of its summary.
+    - Informational warnings are common on a freshly installed system and
+      should not be treated as High by default.
+    """
+    # 1. chkrootkit: cerca solo "INFECTED" come parola intera
+    infected_lines = [
+        line.strip() for line in output.splitlines()
+        if re.search(r'\bINFECTED\b', line)
+    ]
+    if infected_lines:
+        return "Critical", "chkrootkit flagged: " + "; ".join(infected_lines[:5])
+
+    # 2. rkhunter: cerca il conteggio dei rootkit nella summary
+    m = re.search(r'Possible rootkits\s*:\s*(\d+)', output, re.IGNORECASE)
+    if m and int(m.group(1)) > 0:
+        return "Critical", f"rkhunter detected {m.group(1)} possible rootkit(s)."
+
+    # 3. Warning informativi -> al massimo Low
+    if re.search(r'\[\s*Warning\s*\]', output) or 'Warning:' in output:
+        return "Low", "Informational warnings present (typical of a clean system)."
+
+    return "OK", "No rootkits detected."
+
 
 def run(ssh, report, pkg_mgr):
     installed = pkg_mgr.install(PACKAGES)
@@ -26,7 +51,7 @@ def run(ssh, report, pkg_mgr):
             name=NAME,
             commands=[f"install {' '.join(PACKAGES)}"],
             output="",
-            severity="N/D",
+            severity="Info",
             notes="Neither chkrootkit nor rkhunter could be installed."
         )
         return
