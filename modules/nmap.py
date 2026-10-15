@@ -8,11 +8,11 @@ PACKAGE = "nmap"
 
 DANGEROUS_PORTS = {21, 23, 25, 135, 139, 445, 3389}
 
+
 def _parse_nmap_ports(output):
     """Extracts open ports from the nmap output."""
     ports = set()
     for line in output.splitlines():
-        # Search for lines like "22/tcp open  ssh"
         if '/tcp' in line and 'open' in line:
             parts = line.split()
             if parts:
@@ -23,15 +23,29 @@ def _parse_nmap_ports(output):
                         ports.add(int(port_str))
     return ports
 
+
 def _determine_severity(ports):
     if not ports:
         return "N/D", "No open ports found by nmap."
     dangerous_found = ports & DANGEROUS_PORTS
     if dangerous_found:
-        return "High", f"Dangerous ports open: {', '.join(map(str, sorted(dangerous_found)))}"
+        return "High", (f"Dangerous ports open: "
+                        f"{', '.join(map(str, sorted(dangerous_found)))}")
     if len(ports) > 10:
         return "Low", f"High number of open ports ({len(ports)})."
     return "OK", f"{len(ports)} open ports, no critical issues."
+
+
+def _determine_probability(ports):
+    if not ports:
+        return "Low"
+    dangerous_found = ports & DANGEROUS_PORTS
+    if dangerous_found:
+        return "High"
+    if len(ports) > 10:
+        return "Medium"
+    return "Low"
+
 
 def run(ssh, report, pkg_mgr):
     installed = pkg_mgr.install(PACKAGE)
@@ -54,6 +68,7 @@ def run(ssh, report, pkg_mgr):
 
     ports = _parse_nmap_ports(stdout)
     severity, notes = _determine_severity(ports)
+    probability = _determine_probability(ports)
 
     if code != 0:
         notes = (notes + " " if notes else "") + f"nmap exited with code {code}"
@@ -63,5 +78,6 @@ def run(ssh, report, pkg_mgr):
         commands=[command],
         output=output,
         severity=severity,
-        notes=notes
+        notes=notes,
+        probability=probability,
     )

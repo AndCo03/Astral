@@ -5,51 +5,39 @@ parses the JSON output, and removes the binary and cache afterwards.
 """
 
 import json
-import re
 
 NAME = "Trivy Filesystem Vulnerability Scan"
 
-# URL of the official installation script (downloads the binary to /usr/local/bin)
 INSTALL_URL = "https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh"
 TRIVY_BIN = "/usr/local/bin/trivy"
 
-# Directory to exclude to avoid scanning pseudo-filesystems and irrelevant data
 SKIP_DIRS = [
     "/proc", "/sys", "/dev", "/run",
     "/var/lib/docker", "/snap", "/var/lib/containerd"
 ]
 
-# Limit of vulnerabilities shown in the raw output (to prevent the report from exploding)
 MAX_VULNS_IN_OUTPUT = 50
 
 
 def _trivy_installed(ssh):
-    """Verify if trivy is already present in the PATH."""
     _, _, code = ssh.execute(f"command -v {TRIVY_BIN}", sudo=False, timeout=15)
     return code == 0
 
 
 def _install_trivy(ssh):
-    """Downloads the Trivy binary to /usr/local/bin via the official installation script."""
     cmd = f"curl -sfL {INSTALL_URL} | sh -s -- -b /usr/local/bin"
     _, stderr, code = ssh.execute(cmd, sudo=True, timeout=180)
     return code == 0, stderr
 
 
 def _cleanup_trivy(ssh, was_installed):
-    """Removes the Trivy binary and cache only if it was installed by the tool."""
     if was_installed:
-        return  # do not remove an existing installation
+        return
     ssh.execute(f"rm -f {TRIVY_BIN}", sudo=True, timeout=15)
-    # Database cache is in /root/.cache/trivy (executed with sudo)
     ssh.execute("rm -rf /root/.cache/trivy", sudo=True, timeout=15)
 
 
 def _parse_trivy_json(json_output):
-    """
-    Parses the JSON output of Trivy and counts vulnerabilities by severity.
-    Returns (counts_dict, list_top_vulns).
-    """
     counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "UNKNOWN": 0}
     top = []
     try:
@@ -62,7 +50,6 @@ def _parse_trivy_json(json_output):
             sev = vuln.get("Severity", "UNKNOWN").upper()
             if sev in counts:
                 counts[sev] += 1
-            # Collects the details for the top vulnerabilities (CRITICAL/HIGH)
             if sev in ("CRITICAL", "HIGH") and len(top) < MAX_VULNS_IN_OUTPUT:
                 top.append({
                     "id": vuln.get("VulnerabilityID", "N/A"),
@@ -74,10 +61,10 @@ def _parse_trivy_json(json_output):
 
 
 def _determine_severity(counts):
-    """Determines the overall severity based on the counts."""
     total = sum(counts.values())
     if counts["CRITICAL"] > 0:
-        return "Critical", f"{counts['CRITICAL']} critical, {counts['HIGH']} high vulnerabilities."
+        return "Critical", (f"{counts['CRITICAL']} critical, "
+                            f"{counts['HIGH']} high vulnerabilities.")
     if counts["HIGH"] > 0:
         return "High", f"{counts['HIGH']} high vulnerabilities."
     if counts["MEDIUM"] > 0:
@@ -89,10 +76,27 @@ def _determine_severity(counts):
     return "Low", f"{total} vulnerabilities found (low/unknown severity)."
 
 
+def _determine_probability(counts):
+    """
+    Probability of exploitation based on the most severe findings.
+
+    - Any CRITICAL -> Critical
+    - Any HIGH     -> High
+    - Any MEDIUM   -> Medium
+    - Only LOW     -> Low
+    - Nothing      -> Low
+    """
+    if counts["CRITICAL"] > 0:
+        return "Critical"
+    if counts["HIGH"] > 0:
+        return "High"
+    if counts["MEDIUM"] > 0:
+        return "Medium"
+    return "Low"
+
+
 def _build_command():
-    """Builds the trivy fs command with the desired options."""
     skip_args = " ".join(f"--skip-dirs {d}" for d in SKIP_DIRS)
-    # Scan /, limit to library vulnerabilities, filter severity HIGH+CRITICAL
     return (
         f"{TRIVY_BIN} fs --scanners vuln "
         f"--severity HIGH,CRITICAL "
@@ -110,14 +114,13 @@ def run(ssh, report, pkg_mgr):
         if not ok:
             report.add_module(
                 name=NAME,
-                commands=[f"install trivy via script"],
+                commands=["install trivy via script"],
                 output=f"[stderr]\n{err}",
                 severity="N/D",
                 notes="Could not install Trivy on the target."
             )
             return
     else:
-        # If already installed, update only the database before the scan
         ssh.execute(f"{TRIVY_BIN} --download-db-only", sudo=True, timeout=300)
 
     command = _build_command()
@@ -129,11 +132,11 @@ def run(ssh, report, pkg_mgr):
 
     counts, top_vulns = _parse_trivy_json(stdout)
     severity, notes = _determine_severity(counts)
+    probability = _determine_probability(counts)
 
     if code != 0:
         notes = (notes + " " if notes else "") + f"trivy exited with code {code}."
 
-    # Build a readable extract for the raw output
     summary_lines = [
         "Trivy Vulnerability Summary:",
         f"  CRITICAL: {counts['CRITICAL']}",
@@ -158,10 +161,10 @@ def run(ssh, report, pkg_mgr):
         commands=[command],
         output=display_output,
         severity=severity,
-        notes=notes
+        notes=notes,
+        probability=probability,
     )
 
-    # Cleanup: remove binary and cache only if installed by us
     try:
         _cleanup_trivy(ssh, was_installed)
     except Exception:

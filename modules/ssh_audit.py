@@ -13,7 +13,7 @@ PACKAGE = "ssh-audit"
 def _parse_ssh_audit_json(json_output):
     """
     Parses the JSON output of ssh-audit.
-Returns (fail_count, warn_count, info_count, crit_algos, warn_algos).
+    Returns (fail_count, warn_count, info_count, crit_algos, warn_algos).
     """
     try:
         data = json.loads(json_output)
@@ -26,7 +26,6 @@ Returns (fail_count, warn_count, info_count, crit_algos, warn_algos).
     crit_algos = []
     warn_algos = []
 
-    # ssh-audit organize the output per categories: kex, key, enc, mac
     for category in ("kex", "key", "enc", "mac"):
         for item in data.get(category, []):
             alg = item.get("algorithm", "N/A")
@@ -56,11 +55,6 @@ Returns (fail_count, warn_count, info_count, crit_algos, warn_algos).
 
 
 def _determine_severity(fail_count, warn_count):
-    """
-    Severity based on the results of ssh-audit.
-    - fail: critical algorithms (SHA-1, DH group1, etc.)
-    - warn: weak algorithms but not critical (CBC, NIST keys, etc.)
-    """
     if fail_count > 0:
         return "High", f"{fail_count} critical algorithm issue(s) detected."
     if warn_count > 0:
@@ -68,8 +62,23 @@ def _determine_severity(fail_count, warn_count):
     return "OK", "No weak algorithms or critical issues detected."
 
 
+def _determine_probability(fail_count, warn_count):
+    """
+    Probability that an attacker can downgrade or exploit the SSH crypto.
+
+    - Any critical (fail) algorithm -> High
+    - Multiple warns (> 3)          -> Medium
+    - Few warns                     -> Low
+    - Clean                         -> Low
+    """
+    if fail_count > 0:
+        return "High"
+    if warn_count > 3:
+        return "Medium"
+    return "Low"
+
+
 def _build_summary(crit_algos, warn_algos, fail_count, warn_count):
-    """Builds a readable summary for the raw output."""
     lines = []
     lines.append("SSH-Audit Summary:")
     lines.append(f"  Critical (fail): {fail_count}")
@@ -93,7 +102,6 @@ def _build_summary(crit_algos, warn_algos, fail_count, warn_count):
 
 
 def run(ssh, report, pkg_mgr):
-    # ssh-audit is in the standard Debian/Ubuntu repositories (universe)
     installed = pkg_mgr.install(PACKAGE)
     if PACKAGE not in installed and not pkg_mgr.is_installed(PACKAGE):
         report.add_module(
@@ -105,16 +113,13 @@ def run(ssh, report, pkg_mgr):
         )
         return
 
-    # ssh-audit scans the SSH server listening on localhost:22
-    command = f"ssh-audit -j localhost 2>/dev/null"
+    command = "ssh-audit -j localhost 2>/dev/null"
     stdout, stderr, code = ssh.execute(command, sudo=True, timeout=120)
 
     output = stdout
     if stderr.strip():
         output += f"\n\n[stderr]\n{stderr}"
 
-    # ssh-audit: 0 = OK, 1 = FAIL (critical algorithms found)
-    # Other codes indicate a connection or parsing error.
     if code == 1:
         report.add_module(
             name=NAME,
@@ -128,12 +133,12 @@ def run(ssh, report, pkg_mgr):
     fail_count, warn_count, info_count, crit_algos, warn_algos = \
         _parse_ssh_audit_json(stdout)
     severity, notes = _determine_severity(fail_count, warn_count)
+    probability = _determine_probability(fail_count, warn_count)
 
-    # Add info about the number of algorithms analyzed
     notes = (notes + " " if notes else "") + \
-        f"({info_count} informational notes, {len(crit_algos) + len(warn_algos)} algorithm issues)."
+        f"({info_count} informational notes, " \
+        f"{len(crit_algos) + len(warn_algos)} algorithm issues)."
 
-    # Build the readable summary and truncate the JSON output if it's too large
     summary = _build_summary(crit_algos, warn_algos, fail_count, warn_count)
     if len(stdout) > 3000:
         summary += f"\n\n[... JSON raw output truncated ({len(stdout)} bytes) ...]"
@@ -143,5 +148,6 @@ def run(ssh, report, pkg_mgr):
         commands=[command],
         output=summary,
         severity=severity,
-        notes=notes
+        notes=notes,
+        probability=probability,
     )

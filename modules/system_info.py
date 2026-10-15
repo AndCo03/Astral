@@ -3,7 +3,6 @@ System information module for the Linux audit tool.
 Collects basic host information.
 """
 
-
 NAME = "System Info"
 
 
@@ -32,5 +31,7 @@ def run(ssh, report, pkg_mgr):
         name=NAME,
         commands=commands,
         output="\n".join(outputs),
-        severity="Info"
+        severity="Info",
+        probability="N/D",
+        impact="N/D",
     )

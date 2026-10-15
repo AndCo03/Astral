@@ -8,11 +8,11 @@ import re
 NAME = "Lynis System Audit"
 PACKAGE = "lynis"
 
+
 def _parse_lynis(output):
     """Extract number of warnings and suggestions from Lynis output."""
     warnings = 0
     suggestions = 0
-    # Search for patterns like "Warnings (3):" or "Suggestions (12):"
     w_match = re.search(r'Warnings\s*\((\d+)\)', output, re.IGNORECASE)
     if w_match:
         warnings = int(w_match.group(1))
@@ -21,15 +21,34 @@ def _parse_lynis(output):
         suggestions = int(s_match.group(1))
     return warnings, suggestions
 
+
 def _determine_severity(warnings, suggestions):
     if warnings > 5:
-        return "High", f"{warnings} warning detected."
-    elif warnings > 0:
-        return "Medium", f"{warnings} warning detected."
-    elif suggestions > 0:
-        return "Low", f"{suggestions} suggestions for hardening."
-    else:
-        return "OK", "No critical warnings or suggestions."
+        return "High", f"{warnings} warnings detected."
+    if warnings > 0:
+        return "Medium", f"{warnings} warnings detected."
+    if suggestions > 0:
+        return "Low", f"{suggestions} hardening suggestions."
+    return "OK", "No critical warnings or suggestions."
+
+
+def _determine_probability(warnings, suggestions):
+    """
+    Probability that an attacker can exploit the current misconfigurations.
+
+    - Many warnings (> 5)   -> High
+    - Few warnings (1-5)    -> Medium
+    - Only suggestions      -> Low
+    - Nothing               -> Low
+    """
+    if warnings > 5:
+        return "High"
+    if warnings > 0:
+        return "Medium"
+    if suggestions > 0:
+        return "Low"
+    return "Low"
+
 
 def run(ssh, report, pkg_mgr):
     installed = pkg_mgr.install(PACKAGE)
@@ -52,6 +71,7 @@ def run(ssh, report, pkg_mgr):
 
     warnings, suggestions = _parse_lynis(stdout)
     severity, notes = _determine_severity(warnings, suggestions)
+    probability = _determine_probability(warnings, suggestions)
 
     if code != 0:
         notes = (notes + " " if notes else "") + f"lynis exited with code {code}"
@@ -61,5 +81,6 @@ def run(ssh, report, pkg_mgr):
         commands=[command],
         output=output,
         severity=severity,
-        notes=notes
+        notes=notes,
+        probability=probability,
     )

@@ -56,6 +56,7 @@ STARTUP_ART = r"""         .                      .
  / ___ \\__ \| |_| | | (_| | |
 /_/   \_\___/ \__|_|  \__,_|_|
 Automated Server Toolkit for Remote Assessment on Linux
+v1.16.0
          """
 
 # --- Config persistence (profiles) ---

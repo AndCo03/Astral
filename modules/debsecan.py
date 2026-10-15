@@ -8,15 +8,10 @@ import re
 NAME = "debsecan Vulnerability Scan"
 PACKAGE = "debsecan"
 
-# Limit of lines displayed in the report (debsecan can produce hundreds of lines).
 MAX_OUTPUT_LINES = 150
 
 
 def _get_suite(ssh):
-    """
-    Retrieve the distribution codename (e.g., 'noble', 'bookworm').
-    Try /etc/os-release first, then fall back to lsb_release.
-    """
     stdout, _, code = ssh.execute(
         "grep -E '^VERSION_CODENAME=' /etc/os-release | cut -d= -f2 | tr -d '\"'",
         sudo=False, timeout=15
@@ -31,11 +26,7 @@ def _get_suite(ssh):
 
 
 def _parse_debsecan(output):
-    """
-    Parsing the default output of debsecan.
-    Each line follows the format: CVE-YYYY-NNNN packagename [remote|local]
-    Returns (set of unique CVEs, set of affected packages).
-    """
+    """Each line: CVE-YYYY-NNNN packagename [remote|local]."""
     cves = set()
     packages = set()
     for line in output.splitlines():
@@ -47,10 +38,6 @@ def _parse_debsecan(output):
 
 
 def _determine_severity(cve_count, package_count):
-    """
-    Determine severity based on the number of unique CVEs.
-    Note: debsecan does not expose CVSS scores, so this is a rough proxy.
-    """
     if cve_count == 0:
         return "OK", "No known vulnerabilities found."
     if cve_count <= 10:
@@ -62,8 +49,26 @@ def _determine_severity(cve_count, package_count):
     return "Critical", f"{cve_count} CVE(s) in {package_count} package(s)."
 
 
+def _determine_probability(cve_count):
+    """
+    Probability that at least one CVE is exploitable.
+
+    - > 50 CVEs -> Critical
+    - 26-50     -> High
+    - 11-25     -> Medium
+    - 1-10      -> Low
+    - 0         -> Low
+    """
+    if cve_count > 50:
+        return "Critical"
+    if cve_count > 25:
+        return "High"
+    if cve_count > 10:
+        return "Medium"
+    return "Low"
+
+
 def run(ssh, report, pkg_mgr):
-    # debsecan is reliable only on Debian.
     if pkg_mgr.distro_id != "debian":
         report.add_module(
             name=NAME,
@@ -105,8 +110,6 @@ def run(ssh, report, pkg_mgr):
     if stderr.strip():
         output += "\n\n[stderr]\n" + stderr
 
-    # debsecan: 0 = no vulnerabilities found, 1 = vulnerabilities found.
-    # Other codes indicate an error (network, unknown suite, etc.).
     if code not in (0, 1):
         report.add_module(
             name=NAME,
@@ -119,8 +122,8 @@ def run(ssh, report, pkg_mgr):
 
     cves, packages = _parse_debsecan(stdout)
     severity, notes = _determine_severity(len(cves), len(packages))
+    probability = _determine_probability(len(cves))
 
-    # Truncate the output if it's too long, keeping stderr visible.
     lines = stdout.splitlines()
     if len(lines) > MAX_OUTPUT_LINES:
         output = "\n".join(lines[:MAX_OUTPUT_LINES])
@@ -133,5 +136,6 @@ def run(ssh, report, pkg_mgr):
         commands=[command],
         output=output,
         severity=severity,
-        notes=notes
+        notes=notes,
+        probability=probability,
     )
