@@ -7,13 +7,15 @@ NAME = "Rootkit Check"
 PACKAGES = ["chkrootkit", "rkhunter"]
 
 def _determine_severity(output):
-    """Analizza l'output combinato per decidere la severity."""
+    """Analyze the combined output to decide the severity."""
     lowered = output.lower()
     if "infected" in lowered:
-        return "Critical", "Possibile infezione rootkit rilevata (INFECTED)."
+        return "Critical", "Possible infection (INFECTED)."
     if "warning" in lowered:
-        return "High", "Warning rilevati durante il controllo rootkit."
-    return "N/D", "Nessun rootkit o warning rilevante."
+        return "High", "Warnings detected during rootkit check."
+    if "ok" in lowered:
+        return "OK", "System appears to be in good condition."
+    return "N/D", "No rootkit or relevant warning found."
 
 def run(ssh, report, pkg_mgr):
     installed = pkg_mgr.install(PACKAGES)

@@ -38,4 +38,4 @@ python main.py --host <target_ip> --user <target_user> --key ~/.ssh/<host_public
 ```
 
 <br>
-Last update: 15/10/2026 - v1.9.1
+Last update: 15/10/2026 - v1.9.2
