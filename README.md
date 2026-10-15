@@ -25,11 +25,11 @@ A lightweight, automated toolkit designed to perform remote security audits and 
 
 ## Usage
 ```bash
-ssh-copy-id -i ~/.ssh/<host_public_key> <USER>@<IP>
-python main.py --host <IP> --user <utente> --key ~/.ssh/<host_public_key>
+ssh-copy-id -i ~/.ssh/<host_public_key> <target_user>@<target_ip>
+python main.py --host <target_ip> --user <target_user> --key ~/.ssh/<host_public_key>
 ```
 
 <br>
-Up to Date: 14/10/2026
+Up to Date: 15/10/2026
 <br>
 Version: 1.8.5
