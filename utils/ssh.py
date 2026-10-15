@@ -5,6 +5,7 @@ Handles connection, command execution, and sudo support.
 
 import os
 import socket
+from sys import stderr, stdout
 import paramiko
 
 
@@ -103,7 +104,11 @@ class SSHSession:
 
         if sudo and self.sudo_password:
             try:
+                stdin.write("stty -echo\n")
+                stdin.flush()
                 stdin.write(self.sudo_password + '\n')
+                stdin.flush()
+                stdin.write("stty echo\n")
                 stdin.flush()
             except Exception:
                 pass
@@ -113,11 +118,13 @@ class SSHSession:
             stderr_str = stderr.read().decode('utf-8', errors='replace')
             exit_code = stdout.channel.recv_exit_status()
         except socket.timeout:
-            try:
-                stdout.channel.close()
-            except Exception:
-                pass
-            raise Exception(f"Command timed out after {timeout}s: {command}")
+            raise Exception(f"Command timed out: {command}")
+
+        # Sicurezza: rimuovi la password sudo dall'output catturato,
+        # per evitare che finisca nel report.
+        if sudo and self.sudo_password:
+            stdout_str = stdout_str.replace(self.sudo_password, "********")
+            stderr_str = stderr_str.replace(self.sudo_password, "********")
 
         # Rileva errori di sudo
         if sudo and exit_code != 0:
