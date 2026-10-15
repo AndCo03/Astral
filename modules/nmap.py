@@ -9,10 +9,10 @@ PACKAGE = "nmap"
 DANGEROUS_PORTS = {21, 23, 25, 135, 139, 445, 3389}
 
 def _parse_nmap_ports(output):
-    """Estrae le porte aperte dall'output di nmap."""
+    """Extracts open ports from the nmap output."""
     ports = set()
     for line in output.splitlines():
-        # Cerca righe tipo "22/tcp open  ssh"
+        # Search for lines like "22/tcp open  ssh"
         if '/tcp' in line and 'open' in line:
             parts = line.split()
             if parts:
@@ -25,13 +25,13 @@ def _parse_nmap_ports(output):
 
 def _determine_severity(ports):
     if not ports:
-        return "N/D", "Nessuna porta aperta rilevata da nmap."
+        return "N/D", "No open ports found by nmap."
     dangerous_found = ports & DANGEROUS_PORTS
     if dangerous_found:
-        return "High", f"Porte pericolose aperte: {', '.join(map(str, sorted(dangerous_found)))}"
+        return "High", f"Dangerous ports open: {', '.join(map(str, sorted(dangerous_found)))}"
     if len(ports) > 10:
-        return "Low", f"Numero elevato di porte aperte ({len(ports)})."
-    return "OK", f"{len(ports)} porte aperte, nessuna critica."
+        return "Low", f"High number of open ports ({len(ports)})."
+    return "OK", f"{len(ports)} open ports, no critical issues."
 
 def run(ssh, report, pkg_mgr):
     installed = pkg_mgr.install(PACKAGE)

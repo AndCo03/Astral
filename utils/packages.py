@@ -4,7 +4,7 @@ Detects the distribution and package manager, installs and removes packages.
 """
 
 def _major_version(version_str):
-    """Estrae la versione major come intero. Restituisce 0 se non parsabile."""
+    """Extracts the major version as an integer. Returns 0 if not parseable."""
     try:
         return int(str(version_str).split('.')[0])
     except (ValueError, AttributeError):

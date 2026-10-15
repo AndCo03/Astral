@@ -109,9 +109,9 @@ class SSHSession:
             command = f"sudo -S -p '' {command}"
 
         try:
-            # get_pty=False: senza PTY, sudo -S legge la password dalla pipe
-            # in modo affidabile. Su Ubuntu/Debian requiretty non è attivo,
-            # quindi il PTY non è necessario.
+            # get_pty=False: without PTY, sudo -S reads the password from the pipe
+            # in a reliable way. On Ubuntu/Debian, requiretty is not enabled,
+            # so the PTY is not necessary.
             stdin, stdout, stderr = self.client.exec_command(
                 command, timeout=timeout, get_pty=False
             )
@@ -120,8 +120,8 @@ class SSHSession:
 
         if sudo:
             try:
-                # Scrivi sempre una riga, anche se la password è vuota:
-                # sudo -S attende comunque il newline su stdin.
+                # Always write a line, even if the password is empty:
+                # sudo -S waits for a newline on stdin.
                 stdin.write((self.sudo_password or "") + "\n")
                 stdin.flush()
             except Exception:
@@ -134,13 +134,13 @@ class SSHSession:
         except socket.timeout:
             raise Exception(f"Command timed out after {timeout}s: {command}")
 
-        # Sicurezza: rimuovi la password sudo dall'output catturato,
-        # per evitare che finisca nel report.
+        # Security: remove the sudo password from the captured output,
+        # to avoid it ending up in the report.
         if sudo and self.sudo_password:
             stdout_str = stdout_str.replace(self.sudo_password, "********")
             stderr_str = stderr_str.replace(self.sudo_password, "********")
 
-        # Rileva errori di sudo
+        # Detects errors in sudo
         if sudo and exit_code != 0:
             sudo_error_patterns = [
                 "sorry, try again",

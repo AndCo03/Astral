@@ -8,7 +8,7 @@ import re
 
 NAME = "Linux Exploit Suggester (LES)"
 
-# URL raw ufficiale (mzet- / The-Z-Labs)
+# URL raw official (mzet- / The-Z-Labs)
 LES_URL = (
     "https://raw.githubusercontent.com/mzet-/linux-exploit-suggester/"
     "master/linux-exploit-suggester.sh"
@@ -18,8 +18,8 @@ LES_PATH = "/tmp/les.sh"
 
 def _download_les(ssh):
     """
-    Scarica LES in /tmp via curl o wget.
-    Ritorna True se il download è riuscito.
+    Download LES to /tmp using curl or wget.
+    Returns True if the download is successful.
     """
     cmd = (
         f"curl -fsSL {LES_URL} -o {LES_PATH} || "
@@ -34,7 +34,7 @@ def _download_les(ssh):
 
 
 def _cleanup_les(ssh):
-    """Rimuove lo script LES dal target (best effort)."""
+    """Remove the LES script from the target (best effort)."""
     try:
         ssh.execute(f"rm -f {LES_PATH}", sudo=True, timeout=10)
     except Exception:
@@ -43,8 +43,8 @@ def _cleanup_les(ssh):
 
 def _parse_les(output):
     """
-    Estrae i CVE unici dall'output di LES.
-    LES stampa righe del tipo:
+    Extract unique CVEs from the LES output.
+    LES prints lines of the type:
         Name: [CVE-2023-0386] ...
         CVE-2023-0386
     """
@@ -57,8 +57,8 @@ def _parse_les(output):
 
 def _determine_severity(cve_count):
     """
-    Severity basata sul numero di CVE di privilege escalation rilevate.
-    Nota: LES non espone il CVSS, quindi il conteggio è un proxy.
+    Determine severity based on the number of unique CVEs.
+    Note: LES does not expose CVSS scores, so this is a rough proxy.
     """
     if cve_count == 0:
         return "OK", "No kernel privilege escalation exploits suggested."
@@ -72,7 +72,7 @@ def _determine_severity(cve_count):
 
 
 def run(ssh, report, pkg_mgr):
-    # 1. Download su target
+    # 1. Download to target
     if not _download_les(ssh):
         report.add_module(
             name=NAME,
@@ -84,7 +84,7 @@ def run(ssh, report, pkg_mgr):
         return
 
     try:
-        # 2. Esecuzione in "direct mode" + checksec kernel hardening
+        # 2. Execution in "direct mode" + kernel hardening check
         command = f"bash {LES_PATH} --checksec"
         stdout, stderr, code = ssh.execute(command, sudo=True, timeout=180)
 
@@ -107,5 +107,5 @@ def run(ssh, report, pkg_mgr):
             notes=notes
         )
     finally:
-        # 4. Cleanup SEMPRE, anche se il modulo crasha
+        # 4. Cleanup ALWAYS, even if the module crashes
         _cleanup_les(ssh)

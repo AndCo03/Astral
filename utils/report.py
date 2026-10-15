@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 
 
-# Pesi per il calcolo dello score di sicurezza
+# Weights for the security score calculation
 SEVERITY_WEIGHTS = {
     "Critical": 40,
     "High": 20,
@@ -18,7 +18,7 @@ SEVERITY_WEIGHTS = {
     "Info": 0,
 }
 
-# Mappatura severity -> (probabilità, impatto) di default
+# Mapping severity -> (probability, impact) default
 SEVERITY_TO_RISK = {
     "Critical": ("High", "Critical"),
     "High":     ("High", "High"),
@@ -30,7 +30,7 @@ SEVERITY_TO_RISK = {
 
 
 def _rating_from_score(score):
-    """Converte lo score numerico in un giudizio qualitativo."""
+    """Converts the numeric score into a qualitative rating."""
     if score >= 90:
         return "Excellent"
     if score >= 75:
@@ -60,8 +60,8 @@ class Report:
         """
         Add a module result to the report.
 
-        :param probability: Opzionale. Se None, derivata dalla severity.
-        :param impact: Opzionale. Se None, derivato dalla severity.
+        :param probability: Optional. If None, derived from the severity.
+        :param impact: Optional. If None, derived from the severity.
         """
         self.modules.append({
             "name": name,
@@ -112,7 +112,7 @@ class Report:
         }.get(severity, "P5 - Informational")
 
     def _recommendation_for(self, mod):
-        """Suggerimento testuale in base al modulo e alla severity."""
+        """Textual recommendation based on the module and severity."""
         name = mod["name"]
         sev = mod["severity"]
 

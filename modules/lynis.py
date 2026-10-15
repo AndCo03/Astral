@@ -9,10 +9,10 @@ NAME = "Lynis System Audit"
 PACKAGE = "lynis"
 
 def _parse_lynis(output):
-    """Estrae numero di warning e suggerimenti dall'output di Lynis."""
+    """Extract number of warnings and suggestions from Lynis output."""
     warnings = 0
     suggestions = 0
-    # Cerca pattern tipo "Warnings (3):" o "Suggestions (12):"
+    # Search for patterns like "Warnings (3):" or "Suggestions (12):"
     w_match = re.search(r'Warnings\s*\((\d+)\)', output, re.IGNORECASE)
     if w_match:
         warnings = int(w_match.group(1))

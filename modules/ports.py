@@ -9,33 +9,33 @@ NAME = "Open Ports"
 DANGEROUS_PORTS = {21, 23, 25, 135, 139, 445, 3389}
 
 def _parse_ports(output):
-    """Estrae i numeri di porta dall'output di `ss -tulpn`."""
+    """Extract port numbers from the output of `ss -tulpn`."""
     ports = set()
     for line in output.splitlines():
-        # Cerca pattern tipo "0.0.0.0:22" o "*:22"
+        # Search for pattern like "0.0.0.0:22" or "*:22"
         if ':' in line:
             parts = line.split()
             for part in parts:
                 if ':' in part:
-                    # Prende l'ultima parte dopo i due punti
+                    # Takes the last part after the colon.
                     port_str = part.rsplit(':', 1)[-1]
                     if port_str.isdigit():
                         ports.add(int(port_str))
     return ports
 
 def _determine_severity(ports):
-    """Restituisce (severity, note) in base alle porte trovate."""
+    """Returns (severity, note) based on the found ports."""
     if not ports:
-        return "N/D", "Nessuna porta in ascolto rilevata."
+        return "N/D", "No listening ports found."
     
     dangerous_found = ports & DANGEROUS_PORTS
     if dangerous_found:
-        return "High", f"Porte pericolose in ascolto: {', '.join(map(str, sorted(dangerous_found)))}"
+        return "High", f"Dangerous ports listening: {', '.join(map(str, sorted(dangerous_found)))}"
     
     if len(ports) > 10:
-        return "Low", f"Numero elevato di porte in ascolto ({len(ports)})."
+        return "Low", f"High number of listening ports ({len(ports)})."
     
-    return "OK", f"{len(ports)} porte in ascolto, nessuna critica."
+    return "OK", f"{len(ports)} listening ports, no critical issues."
 
 def run(ssh, report, pkg_mgr):
     command = "ss -tulpn"

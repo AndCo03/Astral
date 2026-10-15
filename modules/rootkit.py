@@ -22,7 +22,7 @@ def _determine_severity(output):
     - Informational warnings are common on a freshly installed system and
       should not be treated as High by default.
     """
-    # 1. chkrootkit: cerca solo "INFECTED" come parola intera
+    # 1. chkrootkit: search for "INFECTED" as a whole word
     infected_lines = [
         line.strip() for line in output.splitlines()
         if re.search(r'\bINFECTED\b', line)
@@ -30,12 +30,12 @@ def _determine_severity(output):
     if infected_lines:
         return "Critical", "chkrootkit flagged: " + "; ".join(infected_lines[:5])
 
-    # 2. rkhunter: cerca il conteggio dei rootkit nella summary
+    # 2. rkhunter: search for the rootkit count in the summary
     m = re.search(r'Possible rootkits\s*:\s*(\d+)', output, re.IGNORECASE)
     if m and int(m.group(1)) > 0:
         return "Critical", f"rkhunter detected {m.group(1)} possible rootkit(s)."
 
-    # 3. Warning informativi -> al massimo Low
+    # 3. Informational warnings -> Low at most.
     if re.search(r'\[\s*Warning\s*\]', output) or 'Warning:' in output:
         return "Low", "Informational warnings present (typical of a clean system)."
 

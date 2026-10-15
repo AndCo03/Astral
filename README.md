@@ -38,4 +38,4 @@ python main.py
 ```
 
 <br>
-Last update: 15/10/2026 - v1.15.0
+Last update: 15/10/2026 - v1.15.1
