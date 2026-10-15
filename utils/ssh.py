@@ -2,7 +2,7 @@
 SSH module for the Linux audit tool.
 Handles connection, command execution, and sudo support.
 """
-
+import os
 import socket
 import paramiko
 
@@ -34,7 +34,7 @@ class SSHSession:
         self.port = port
         self.username = username
         self.password = password
-        self.key_filename = key_filename
+        self.key_filename = os.path.expanduser(key_filename) if key_filename else None
         self.timeout = timeout
         self.client = None
         self.sudo_password = None

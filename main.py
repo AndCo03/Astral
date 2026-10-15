@@ -5,6 +5,8 @@ Connects via SSH, runs audit modules, generates a Markdown report, cleans up.
 
 import argparse
 import getpass
+import json
+import os
 import sys
 
 from utils.ssh import SSHSession, SudoError
@@ -22,7 +24,6 @@ from modules import trivy
 from modules import ssh_audit
 
 # Registry of modules in execution order.
-# Each entry: (module, display name)
 MODULES = [
     (system_info, system_info.NAME),
     (ports, ports.NAME),
@@ -50,15 +51,37 @@ STARTUP_ART = r"""         .                      .
          :         . :
          .       *"""
 
+# --- Config persistence (profiles) ---
+CONFIG_DIR = os.path.expanduser("~/.astral")
+CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
+
+# --- SSH key auto-detection (in order of preference) ---
+DEFAULT_KEYS = [
+    "~/.ssh/id_ed25519",
+    "~/.ssh/id_rsa",
+    "~/.ssh/id_ecdsa",
+]
+
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        description="Linux audit tool for remote risk assessment."
+        description="Linux audit tool for remote risk assessment.",
+        epilog=(
+            "examples:\n"
+            "  python main.py                          # interactive wizard\n"
+            "  python main.py admin@192.168.1.10       # auto-detects SSH key\n"
+            "  python main.py --profile prod           # load a saved profile\n"
+            "  python main.py admin@10.0.0.1 --save prod\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--host", required=True, help="Remote hostname or IP.")
-    parser.add_argument("--port", type=int, default=22, help="SSH port (default: 22).")
-    parser.add_argument("--user", required=True, help="SSH username.")
+    parser.add_argument("target", nargs="?",
+                        help="Target in 'user@host' form (optional shortcut).")
+    parser.add_argument("--host", help="Remote hostname or IP.")
+    parser.add_argument("--port", type=int, default=None,
+                        help="SSH port (default: 22).")
+    parser.add_argument("--user", help="SSH username.")
     parser.add_argument("--password", help="SSH password (optional if using a key).")
     parser.add_argument("--key", help="Path to SSH private key file.")
     parser.add_argument("--sudo-pass", help="Sudo password (prompted if not provided).")
@@ -66,8 +89,183 @@ def parse_args():
                         help="Skip all modules that require sudo, without prompting.")
     parser.add_argument("--timeout", type=int, default=15,
                         help="SSH connection timeout in seconds (default: 15).")
+    parser.add_argument("--profile", metavar="NAME",
+                        help="Load a saved connection profile.")
+    parser.add_argument("--save", metavar="NAME",
+                        help="Save the resolved connection as a named profile.")
+    parser.add_argument("-y", "--yes", action="store_true",
+                        help="Skip the confirmation prompt.")
     return parser.parse_args()
 
+
+# ---------------------------------------------------------------------------
+# Interactive helpers
+# ---------------------------------------------------------------------------
+
+def _prompt(text, default=None, password=False):
+    """Prompt the user for a value, optionally with a default."""
+    suffix = f" [{default}]" if default is not None else ""
+    while True:
+        try:
+            if password:
+                val = getpass.getpass(f"{text}{suffix}: ")
+            else:
+                val = input(f"{text}{suffix}: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            sys.exit(1)
+        if val:
+            return val
+        if default is not None:
+            return default
+        print("  [!] This field is required.")
+
+
+def _detect_keys():
+    """Return the list of SSH private keys found in ~/.ssh."""
+    return [k for k in DEFAULT_KEYS if os.path.isfile(os.path.expanduser(k))]
+
+
+# ---------------------------------------------------------------------------
+# Profile management
+# ---------------------------------------------------------------------------
+
+def _load_profile(name):
+    if not os.path.isfile(CONFIG_FILE):
+        print(f"[!] No saved profiles (expected at {CONFIG_FILE}).")
+        sys.exit(1)
+    try:
+        with open(CONFIG_FILE) as f:
+            data = json.load(f)
+    except Exception as e:
+        print(f"[!] Could not read profiles: {e}")
+        sys.exit(1)
+    if name not in data:
+        available = ", ".join(data.keys()) or "(none)"
+        print(f"[!] Profile '{name}' not found. Available: {available}")
+        sys.exit(1)
+    return data[name]
+
+
+def _save_profile(name, args):
+    os.makedirs(CONFIG_DIR, exist_ok=True)
+    data = {}
+    if os.path.isfile(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE) as f:
+                data = json.load(f)
+        except Exception:
+            data = {}
+    # NOTE: passwords are intentionally never persisted.
+    data[name] = {
+        "host": args.host,
+        "user": args.user,
+        "port": args.port,
+        "key": args.key,
+    }
+    try:
+        with open(CONFIG_FILE, "w") as f:
+            json.dump(data, f, indent=2)
+        os.chmod(CONFIG_FILE, 0o600)
+        print(f"[o] Profile '{name}' saved.")
+    except Exception as e:
+        print(f"[!] Could not save profile: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Connection resolution
+# ---------------------------------------------------------------------------
+
+def _parse_target(target):
+    """Split 'user@host' → (user, host)."""
+    if "@" in target:
+        u, h = target.rsplit("@", 1)
+        return u, h
+    return None, target
+
+
+def _resolve_connection(args):
+    """Fill in host/user/port/key/password from CLI, profile, or interactive prompts."""
+    # 1. Load profile if requested (explicit CLI flags take precedence)
+    if args.profile:
+        prof = _load_profile(args.profile)
+        args.host = args.host or prof.get("host")
+        args.user = args.user or prof.get("user")
+        if args.port is None:
+            args.port = prof.get("port")
+        args.key = args.key or prof.get("key")
+        print(f"[o] Loaded profile '{args.profile}'.")
+
+    # 2. Parse the user@host positional shortcut
+    if args.target:
+        u, h = _parse_target(args.target)
+        args.host = args.host or h
+        if u:
+            args.user = args.user or u
+
+    # 3. Default port
+    if args.port is None:
+        args.port = 22
+
+    # 4. Interactive prompts for anything still missing
+    setup_needed = not (args.host and args.user)
+    if setup_needed:
+        print("\n[i] Interactive setup (Ctrl+C to abort)")
+
+    if not args.host:
+        target = _prompt("Target (user@host)")
+        u, h = _parse_target(target)
+        args.host = h
+        if u and not args.user:
+            args.user = u
+    if not args.user:
+        args.user = _prompt("Username")
+
+    # 5. Authentication: auto-detect keys, offer password fallback
+    if not args.key and not args.password:
+        keys = _detect_keys()
+        if keys:
+            print(f"\n[i] Detected SSH key: {keys[0]}")
+            if len(keys) > 1:
+                print("[?] Multiple keys found:")
+                for i, k in enumerate(keys, 1):
+                    print(f"    {i}) {k}")
+                idx = _prompt("Choose key", default="1")
+                try:
+                    args.key = keys[int(idx) - 1]
+                except (ValueError, IndexError):
+                    args.key = keys[0]
+            else:
+                args.key = keys[0]
+            use_pass = _prompt("Use password instead? (y/N)", default="N").lower()
+            if use_pass in ("y", "yes"):
+                args.key = None
+                args.password = getpass.getpass("[?] SSH password: ")
+        else:
+            print("\n[i] No SSH keys found in ~/.ssh — password required.")
+            args.password = getpass.getpass("[?] SSH password: ")
+
+
+def _confirm(args):
+    """Show a summary and ask the user to confirm."""
+    print("\n[i] Connection summary")
+    print(f"    Target: {args.user}@{args.host}:{args.port}")
+    if args.key:
+        print(f"    Auth:   SSH key ({args.key})")
+    elif args.password:
+        print(f"    Auth:   Password")
+    print(f"    Sudo:   {'disabled (--no-sudo)' if args.no_sudo else 'will be requested'}")
+    if args.save:
+        print(f"    Save:   profile '{args.save}' will be stored in {CONFIG_FILE}")
+    ans = _prompt("Proceed with the audit? (Y/n)", default="Y").lower()
+    if ans not in ("y", "yes"):
+        print("[i] Aborted by user.")
+        sys.exit(0)
+
+
+# ---------------------------------------------------------------------------
+# Sudo resolution
+# ---------------------------------------------------------------------------
 
 def _resolve_sudo(args, ssh):
     """
@@ -122,9 +320,24 @@ def _resolve_sudo(args, ssh):
     return False
 
 
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
 def main():
-    print(STARTUP_ART)
     args = parse_args()
+    print(STARTUP_ART)
+
+    # Fill in missing connection details (profile → positional → prompts).
+    _resolve_connection(args)
+
+    # Confirmation summary (skipped with -y).
+    if not args.yes:
+        _confirm(args)
+
+    # Persist the resolved connection, if the user asked for it.
+    if args.save:
+        _save_profile(args.save, args)
 
     ssh = SSHSession(
         host=args.host,
