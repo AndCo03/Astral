@@ -23,13 +23,13 @@ def _parse_lynis(output):
 
 def _determine_severity(warnings, suggestions):
     if warnings > 5:
-        return "High", f"{warnings} warning rilevati."
+        return "High", f"{warnings} warning detected."
     elif warnings > 0:
-        return "Medium", f"{warnings} warning rilevati."
+        return "Medium", f"{warnings} warning detected."
     elif suggestions > 0:
-        return "Low", f"{suggestions} suggerimenti di hardening."
+        return "Low", f"{suggestions} suggestions for hardening."
     else:
-        return "OK", "Nessun warning o suggerimento critico."
+        return "OK", "No critical warnings or suggestions."
 
 def run(ssh, report, pkg_mgr):
     installed = pkg_mgr.install(PACKAGE)
