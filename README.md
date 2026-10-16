@@ -73,5 +73,25 @@ python main.py <target_user@target_ip> --key ~/.ssh/<your_key> --sudo-pass 'pass
 | --profile NAME | Load a saved connection profile | – |
 | --save NAME | Save the resolved connection as a named profile | – |
 | -y, --yes | Skip the confirmation prompt | False |
+
+**Profiles**
+Astral can save and load connection profiles so you don't have to re-enter the same details every time.
+
+* Save a profile: --save <name> – saves host, user, port, and SSH key path to ~/.astral/config.json (permissions 600). Passwords are never saved.
+* Load a profile: --profile <name> – loads the saved connection details.
+* CLI flags always override profile values.
+
+The configuration file is a simple JSON map:
+```bash
+{
+  "prod": {
+    "host": "192.168.1.1",
+    "user": "admin",
+    "port": 22,
+    "key": "~/.ssh/id_ed25519"
+  }
+}
+```
+
 <br>
 Last update: 15/10/2026 - v1.16.0
