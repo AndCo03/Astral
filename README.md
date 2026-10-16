@@ -52,7 +52,7 @@ The wizard will prompt you for:
 * Authentication method (auto-detects SSH keys in ~/.ssh, or asks for a password)
 * Sudo password (with retry)
 * Confirmation before starting
-<br>
+
 **Otherwise**
 You can supply all connection details directly:
 ```bash
@@ -61,6 +61,6 @@ python main.py <target_user@target_ip> --key ~/.ssh/<your_key> --sudo-pass 'pass
 **Command-line flags**
  | Flag | Description | Default |
  |target | Positional argument in user@host form. Can be used instead of --host and --user | - |
- 
+
 <br>
 Last update: 15/10/2026 - v1.16.0
