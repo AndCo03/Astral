@@ -53,7 +53,7 @@ The wizard will prompt you for:
 * Sudo password (with retry)
 * Confirmation before starting
 
-**Otherwise**
+**Otherwise**<br>
 You can supply all connection details directly:
 ```bash
 python main.py <target_user@target_ip> --key ~/.ssh/<your_key> --sudo-pass 'password' -y
@@ -74,7 +74,7 @@ python main.py <target_user@target_ip> --key ~/.ssh/<your_key> --sudo-pass 'pass
 | --save NAME | Save the resolved connection as a named profile | – |
 | -y, --yes | Skip the confirmation prompt | False |
 
-**Profiles**
+**Profiles**<br>
 Astral can save and load connection profiles so you don't have to re-enter the same details every time.
 
 * Save a profile: --save <name> – saves host, user, port, and SSH key path to ~/.astral/config.json (permissions 600). Passwords are never saved.
