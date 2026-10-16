@@ -59,8 +59,9 @@ You can supply all connection details directly:
 python main.py <target_user@target_ip> --key ~/.ssh/<your_key> --sudo-pass 'password' -y
 ```
 **Command-line flags**
- | Flag | Description | Default |
- |target | Positional argument in user@host form. Can be used instead of --host and --user | - |
+| Flag | Description | Default |
+| ----- | ----- | ----- |
+|target | Positional argument in user@host form. Can be used instead of --host and --user | - |
 
 <br>
 Last update: 15/10/2026 - v1.16.0
