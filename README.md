@@ -92,6 +92,20 @@ The configuration file is a simple JSON map:
   }
 }
 ```
+## References
+### Audit Tools
+* Lynis - https://cisofy.com/lynis/
+* Namp - https://nmap.org/
+* Debsecan - https://packages.debian.org/debsecan
+* Linux Exploit Suggester (LES) - https://github.com/mzet-/linux-exploit-suggester
+* Trivy - https://github.com/aquasecurity/trivy
+* Ssh-audit - https://github.com/jtesta/ssh-audit
+* Chrootkit - http://www.chkrootkit.org/
+* Rkhunter - http://rkhunter.sourceforge.net/
+
+## SSH and Python Libraries
+* Paramiko – https://www.paramiko.org/
+* OpenSSH - https://www.openssh.com/
 
 <br>
 Last update: 15/10/2026 - v1.16.0
