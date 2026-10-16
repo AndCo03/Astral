@@ -62,16 +62,16 @@ python main.py <target_user@target_ip> --key ~/.ssh/<your_key> --sudo-pass 'pass
 | Flag | Description | Default |
 | ----- | ----- | ----- |
 |target | Positional argument in user@host form. Can be used instead of --host and --user | - |
-| --host <HOST> | Remote hostname or IP address | - |
-| --port <PORT> | SSH port | 22 |
-| --user <USER> | SSH username | – |
-| --password <PASS> | SSH password. Optional if using a key | – |
-| --key <PATH> | Path to SSH private key file | auto-detect |
-| --sudo-pass <PASS> | Sudo password. If not provided, you will be prompted | – |
+| --host HOST | Remote hostname or IP address | - |
+| --port PORT | SSH port | 22 |
+| --user USER | SSH username | – |
+| --password PASS | SSH password. Optional if using a key | – |
+| --key PATH | Path to SSH private key file | auto-detect |
+| --sudo-pass PASS | Sudo password. If not provided, you will be prompted | – |
 | --no-sudo | Skip all modules that require sudo, without prompting | False |
-| --timeout <SECONDS> | SSH connection timeout | 15 |
-| --profile <NAME> | Load a saved connection profile | – |
-| --save <NAME> | Save the resolved connection as a named profile | – |
+| --timeout SECONDS | SSH connection timeout | 15 |
+| --profile NAME | Load a saved connection profile | – |
+| --save NAME | Save the resolved connection as a named profile | – |
 | -y, --yes | Skip the confirmation prompt | False |
 <br>
 Last update: 15/10/2026 - v1.16.0
