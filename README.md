@@ -1,6 +1,8 @@
 # Astral - Automated Server Toolkit for Remote Assessment on Linux
 
 A lightweight, automated toolkit designed to perform remote security audits and risk assessments on Linux servers over SSH with zero permanent footprint.
+<br>
+Last update: 15/10/2026 - v1.16.0
 
 ## Key Features
 
@@ -106,6 +108,3 @@ The configuration file is a simple JSON map:
 ### SSH and Python Libraries
 * Paramiko – https://www.paramiko.org/
 * OpenSSH - https://www.openssh.com/
-
-<br>
-Last update: 15/10/2026 - v1.16.0
